@@ -1,2 +1,3 @@
 expressApp.json
+*.jwt
 .env
