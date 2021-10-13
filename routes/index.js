@@ -5,7 +5,7 @@ const ziti   = require('ziti-sdk-nodejs');
 
 const UV_EOF = -4095;
 
-const zidFile        = './zid.json'
+const zidFile        = './expressApp.json'
 const zitiId         = process.env.ZITI_IDENTITY;
 const serviceUrl    = process.env.SERVICE_URL;
 
