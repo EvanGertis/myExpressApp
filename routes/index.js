@@ -1,8 +1,25 @@
 var express = require('express');
 var router = express.Router();
+const fs     = require('fs');
 const ziti   = require('ziti-sdk-nodejs');
 
 const UV_EOF = -4095;
+
+const zidFile        = './zid.json'
+const zitiId         = process.env.ZITI_IDENTITY;
+const serviceUrl    = process.env.SERVICE_URL;
+
+if (zitiId === '') {
+  console.log(`ZITI_IDENTITY env var was not specified`);
+  process.exit(-1);
+}
+if (serviceUrl === '') {
+  console.log(`SERRVICE_URL env var was not specified`);
+  process.exit(-1);
+}
+
+// Write zitiId to file
+fs.writeFileSync(zidFile, zitiId);
 
 const zitiInit = async (zitiFile) => {
   return new Promise((resolve, reject) => {
@@ -86,6 +103,27 @@ const zitiHttpRequestData = async (req, buf) => {
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
+  console.log(req.body);
+  console.log(res);
+   // First make sure we can initialize Ziti
+  await zitiInit(zidFile).catch((err) => {
+    console.log(`zitiInit failed: ${err}`);
+    process.exit(-1);
+  });
+
+  let serviceName = req.hostname;
+  await zitiServiceAvailable(serviceName).catch((err) => {
+    console.log(`zitiServiceAvailable failed: ${err}`);
+    process.exit(-1);
+  });
+
+  let request = await zitiHttpRequest(serviceUrl, req.method, req.headers).catch((err) => {
+    console.log(`zitiHttpRequest failed: ${err}`);
+    process.exit(-1);
+  });
+
+  ziti.Ziti_http_request_end(request);
+
   res.render('index', { title: 'Express' });
   
 });
