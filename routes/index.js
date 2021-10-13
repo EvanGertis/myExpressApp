@@ -5,9 +5,9 @@ const ziti   = require('ziti-sdk-nodejs');
 
 const UV_EOF = -4095;
 
-const zidFile        = './expressApp.json'
-const zitiId         = process.env.ZITI_IDENTITY;
-const serviceUrl    = process.env.SERVICE_URL;
+const zidFile       = './expressApp.json'
+const zitiId        = "expressApp";
+const serviceUrl    = "AzureAppService.com";
 
 if (zitiId === '') {
   console.log(`ZITI_IDENTITY env var was not specified`);
@@ -105,27 +105,32 @@ const zitiHttpRequestData = async (req, buf) => {
 router.get('/', function(req, res, next) {
   console.log(req.body);
   console.log(res);
-   // First make sure we can initialize Ziti
-  await zitiInit(zidFile).catch((err) => {
-    console.log(`zitiInit failed: ${err}`);
-    process.exit(-1);
-  });
+  (async function() {
+    try{ 
+      // First make sure we can initialize Ziti
+      await zitiInit(zidFile).catch((err) => {
+        console.log(`zitiInit failed: ${err}`);
+        process.exit(-1);
+      });
 
-  let serviceName = req.hostname;
-  await zitiServiceAvailable(serviceName).catch((err) => {
-    console.log(`zitiServiceAvailable failed: ${err}`);
-    process.exit(-1);
-  });
+      let serviceName = req.hostname;
+      await zitiServiceAvailable(serviceName).catch((err) => {
+        console.log(`zitiServiceAvailable failed: ${err}`);
+        process.exit(-1);
+      });
 
-  let request = await zitiHttpRequest(serviceUrl, req.method, req.headers).catch((err) => {
-    console.log(`zitiHttpRequest failed: ${err}`);
-    process.exit(-1);
-  });
+      let request = await zitiHttpRequest(serviceUrl, req.method, req.headers).catch((err) => {
+        console.log(`zitiHttpRequest failed: ${err}`);
+        process.exit(-1);
+      });
 
-  ziti.Ziti_http_request_end(request);
+      ziti.Ziti_http_request_end(request);
 
-  res.render('index', { title: 'Express' });
-  
+      res.render('index', { title: 'Express' });
+    } catch (error) {
+      console.log(error.message);
+    }
+  }());
 });
 
 module.exports = router;
